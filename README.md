@@ -36,17 +36,17 @@ target/wasm32-unknown-unknown/release/filter_rust.wasm
     HTTP_Port    2020
 
 [INPUT]
-    Name dummy
-    Tag  iis.local
-
+    name              tail
+    path              /dataset/*.log
+    Tag               iis.*
 [FILTER]
     Name   wasm
     match  iis.*
-    WASM_Path C:\Users\kenri\github.com\otel_project\flb_filter_iis_wasm\target\wasm32-unknown-unknown\release\flb_filter_iis_wasm.wasm
+    WASM_Path /plugins/flb_filter_iis_wasm.wasm
     Function_Name flb_filter_log_iis
-    accessible_paths C:\Users\kenri\github.com\otel_project\fluent-bit-2.1.8-win64
+    accessible_paths .
 
 [OUTPUT]
-    Name  stdout
-    Match *
+    name stdout
+    match iis.*
 ```
