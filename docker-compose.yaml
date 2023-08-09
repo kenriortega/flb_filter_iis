@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  fluent-bit:
+    image: cr.fluentbit.io/fluent/fluent-bit
+    container_name: fluent-bit
+    ports:
+      - 8888:8888
+      - 2020:2020
+    volumes:
+      - ./docker/conf/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./target/wasm32-unknown-unknown/release/flb_filter_iis_wasm.wasm:/plugins/flb_filter_iis_wasm.wasm
+      - ./docker/dataset/:/dataset/
