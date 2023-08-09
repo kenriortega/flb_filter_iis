@@ -1,0 +1,23 @@
+[package]
+name = "flb_filter_iis_wasm"
+version = "0.1.0"
+edition = "2021"
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+crate-type = ["cdylib"]
+
+[target.wasm32-unknown-unknown]
+rustflags = [
+  "-C", "link-args=-z stack-size=1500000",
+]
+
+[dependencies]
+serde = { version = "1.0.160", features = ["derive"] }
+serde_json = "1.0.104"
+serde_bytes = "0.11"
+rmp-serde = "1.1"
+regex = "1.9.2"
+chrono = "0.4.24"
+libc = "0.2"
