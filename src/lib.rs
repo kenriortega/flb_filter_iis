@@ -80,7 +80,6 @@ pub extern "C" fn flb_filter_log_iis_w3c_custom(
 
     let input_logs = v["log"].as_str().unwrap();
     let el: LogEntryIIS = LogEntryIIS::parse_log_iis_w3c_custom(input_logs).unwrap();
-    // let elements: Vec<&str> = input_logs.split(" ").collect();
 
 
     let message = json!({
