@@ -1,6 +1,4 @@
-use regex::Regex;
 use serde::{Deserialize, Serialize};
-// Import pure and fast JSON library written in Rust
 use chrono::{TimeZone, Utc};
 use serde_json::json;
 use serde_json::Value;
@@ -32,55 +30,29 @@ pub struct LogEntryIIS {
 
 impl LogEntryIIS {
     pub fn parse_log_iis(input: &str) -> Option<Self> {
-        let re = Regex::new(r#"^(\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2})\s(\S+)\s(\S+)\s(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\s(\S+)\s(\S+)\s(\S+)\s(\S+)\s(\S+)\s(\S+)\s(\S+)\s(\S+)\s(\S+)\s(\S+)\s(\S+)\s(\S+)\s(\S+)\s(\S+)"#).unwrap();
-
-        if let Some(captures) = re.captures(input) {
-            let date_time = captures.get(1).map(|m| m.as_str()).unwrap().to_string();
-            let s_sitename = captures.get(2).map(|m| m.as_str()).unwrap().to_string();
-            let s_computername = captures.get(3).map(|m| m.as_str()).unwrap().to_string();
-            let s_ip = captures.get(4).map(|m| m.as_str()).unwrap().to_string();
-            let cs_method = captures.get(5).map(|m| m.as_str()).unwrap().to_string();
-            let cs_uri_stem = captures.get(6).map(|m| m.as_str()).unwrap().to_string();
-            let cs_uri_query = captures.get(7).map(|m| m.as_str()).unwrap().to_string();
-            let s_port = captures.get(8).map(|m| m.as_str()).unwrap().to_string();
-            let c_ip = captures.get(9).map(|m| m.as_str()).unwrap().to_string();
-            let cs_user_agent = captures.get(10).map(|m| m.as_str()).unwrap().to_string();
-            let cs_cookie = captures.get(11).map(|m| m.as_str()).unwrap().to_string();
-            let cs_referer = captures.get(12).map(|m| m.as_str()).unwrap().to_string();
-            let cs_host = captures.get(13).map(|m| m.as_str()).unwrap().to_string();
-            let sc_status = captures.get(14).map(|m| m.as_str()).unwrap().to_string();
-            let sc_bytes = captures.get(15).map(|m| m.as_str()).unwrap().to_string();
-            let cs_bytes = captures.get(16).map(|m| m.as_str()).unwrap().to_string();
-            let time_taken = captures.get(17).map(|m| m.as_str()).unwrap().to_string();
-            let c_authorization_header = captures.get(18).map(|m| m.as_str()).unwrap().to_string();
-
+        let elements: Vec<&str> = input.split(" ").collect();
             Some(LogEntryIIS {
-                date_time,
-                s_sitename,
-                s_computername,
-                s_ip,
-                cs_method,
-                cs_uri_stem,
-                cs_uri_query,
-                s_port,
-                c_ip,
-                cs_user_agent,
-                cs_cookie,
-                cs_referer,
-                cs_host,
-                sc_status,
-                sc_bytes,
-                cs_bytes,
-                time_taken,
-                c_authorization_header,
+                date_time: format!("{} {}",elements[0],elements[1]),
+                s_sitename: elements[2].to_string(),
+                s_computername: elements[3].to_string(),
+                s_ip:elements[4].to_string(),
+                cs_method: elements[5].to_string(),
+                cs_uri_stem: elements[6].to_string(),
+                cs_uri_query: elements[7].to_string(),
+                s_port: elements[8].to_string(),
+                c_ip: elements[9].to_string(),
+                cs_user_agent: elements[10].to_string(),
+                cs_cookie: elements[11].to_string(),
+                cs_referer: elements[12].to_string(),
+                cs_host: elements[13].to_string(),
+                sc_status: elements[14].to_string(),
+                sc_bytes: elements[15].to_string(),
+                cs_bytes: elements[16].to_string(),
+                time_taken: elements[17].to_string(),
+                c_authorization_header: elements[18].to_string(),
             })
-        } else {
-            None
         }
     }
-}
-
-
 
 #[no_mangle]
 pub extern "C" fn flb_filter_log_iis(
@@ -98,13 +70,33 @@ pub extern "C" fn flb_filter_log_iis(
     vt.write(slice_tag).expect("Unable to write");
     let vtag = str::from_utf8(&vt).unwrap();
     let v: Value = serde_json::from_slice(slice_record).unwrap();
-    let dt = Utc.timestamp(time_sec as i64, time_nsec);
+    let dt = Utc.timestamp_opt(time_sec as i64, time_nsec).unwrap();
     let time = dt.format("%Y-%m-%dT%H:%M:%S.%9f %z").to_string();
 
-    let input = v["log"].as_str().unwrap();
-    let data = LogEntryIIS::parse_log_iis(input).unwrap();
+    let input_logs = v["log"].as_str().unwrap();
+    let el: LogEntryIIS = LogEntryIIS::parse_log_iis(input_logs).unwrap();
+    // let elements: Vec<&str> = input_logs.split(" ").collect();
+
+
     let message = json!({
-        "message": serde_json::to_string(&data).unwrap(),
+        "date": el.date_time,
+        "s_sitename": el.s_sitename,
+        "s_computername": el.s_computername,
+        "s_ip": el.s_ip,
+        "cs_method": el.cs_method,
+        "cs_uri_stem": el.cs_uri_stem,
+        "cs_uri_query": el.cs_uri_query,
+        "s_port": el.s_port,
+        "c_ip": el.c_ip,
+        "cs_user_agent": el.cs_user_agent,
+        "cs_cookie": el.cs_cookie,
+        "cs_referer": el.cs_referer,
+        "cs_host": el.cs_host,
+        "sc_status": el.sc_status,
+        "sc_bytes": el.sc_bytes,
+        "cs_bytes": el.cs_bytes,
+        "time_taken": el.time_taken,
+        "c_authorization_header": el.c_authorization_header,
         "time": format!("{}", time),
         "tag": vtag,
         "source": "LogEntryIIS",
