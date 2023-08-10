@@ -29,7 +29,12 @@ pub struct LogEntryIIS {
 }
 
 impl LogEntryIIS {
-    pub fn parse_log_iis(input: &str) -> Option<Self> {
+    ///
+    /// parse_log_iis
+    /// recive this input `date time s-sitename s-computername s-ip cs-method cs-uri-stem cs-uri-query s-port c-ip cs(User-Agent) cs(Cookie) cs(Referer) cs-host sc-status sc-bytes cs-bytes time-taken c-authorization-header`
+    /// return LogEntryIIS
+    /// 
+    pub fn parse_log_iis_w3c_custom(input: &str) -> Option<Self> {
         let elements: Vec<&str> = input.split(" ").collect();
             Some(LogEntryIIS {
                 date_time: format!("{} {}",elements[0],elements[1]),
@@ -74,7 +79,7 @@ pub extern "C" fn flb_filter_log_iis(
     let time = dt.format("%Y-%m-%dT%H:%M:%S.%9f %z").to_string();
 
     let input_logs = v["log"].as_str().unwrap();
-    let el: LogEntryIIS = LogEntryIIS::parse_log_iis(input_logs).unwrap();
+    let el: LogEntryIIS = LogEntryIIS::parse_log_iis_w3c_custom(input_logs).unwrap();
     // let elements: Vec<&str> = input_logs.split(" ").collect();
 
 
@@ -110,10 +115,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_parse_log_iis_date_time() {
+    fn test_parse_log_iis_w3c_custom() {
         let input = "2023-07-20 17:18:54 W3SVC279 WIN-PC1 192.168.1.104 GET /api/Site/site-data qName=quww 13334 10.0.0.0 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/114.0.0.0+Safari/537.36+Edg/114.0.1823.82 _ga=GA2.3.499592451.1685996504;+_gid=GA2.3.1209215542.1689808850;+_ga_PC23235C8Y=GS2.3.1689811012.8.0.1689811012.0.0.0 http://192.168.1.104:13334/swagger/index.html 192.168.1.104:13334 200 456 1082 3131 Bearer+token";
 
-        match LogEntryIIS::parse_log_iis(input) {
+        match LogEntryIIS::parse_log_iis_w3c_custom(input) {
             Some(data) => {
                 assert_eq!(data.date_time, "2023-07-20 17:18:54".to_owned());
                 assert_eq!(data.s_computername, "WIN-PC1".to_owned());
