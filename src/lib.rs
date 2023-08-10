@@ -60,7 +60,7 @@ impl LogEntryIIS {
     }
 
 #[no_mangle]
-pub extern "C" fn flb_filter_log_iis(
+pub extern "C" fn flb_filter_log_iis_w3c_custom(
     tag: *const c_char,
     tag_len: u32,
     time_sec: u32,

@@ -43,7 +43,7 @@ target/wasm32-unknown-unknown/release/filter_rust.wasm
     Name   wasm
     match  iis.*
     WASM_Path /plugins/flb_filter_iis_wasm.wasm
-    Function_Name flb_filter_log_iis
+    Function_Name flb_filter_log_iis_w3c_custom
     accessible_paths .
 
 [OUTPUT]
