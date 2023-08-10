@@ -50,3 +50,10 @@ target/wasm32-unknown-unknown/release/filter_rust.wasm
     name stdout
     match iis.*
 ```
+
+### Output
+
+```console
+
+fluent-bit  | [0] iis.dataset.app.log: [[1691706041.647543467, {}], {"c_authorization_header"=>"Bearer+token", "c_ip"=>"10.0.0.0", "cs_bytes"=>"1082", "cs_cookie"=>"_ga=GA2.3.499592451.1685996504;+_gid=GA2.3.1209215542.1689808850;+_ga_PC23235C8Y=GS2.3.1689811012.8.0.1689811012.0.0.0", "cs_host"=>"192.168.1.104:13334", "cs_method"=>"GET", "cs_referer"=>"http://192.168.1.104:13334/swagger/index.html", "cs_uri_query"=>"qName=quww", "cs_uri_stem"=>"/api/Site/site-data", "cs_user_agent"=>"Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/114.0.0.0+Safari/537.36+Edg/114.0.1823.82", "date"=>"2023-07-20 17:18:54", "s_computername"=>"WIN-PC1", "s_ip"=>"192.168.1.104", "s_port"=>"13334", "s_sitename"=>"W3SVC279", "sc_bytes"=>"456", "sc_status"=>"200", "source"=>"LogEntryIIS", "tag"=>"iis.dataset.app.log", "time"=>"2023-08-10T22:20:41.647543467 +0000", "time_taken"=>"3131"}]
+```
