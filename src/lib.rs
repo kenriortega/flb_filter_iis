@@ -120,8 +120,8 @@ mod tests {
         match LogEntryIIS::parse_log_iis_w3c_custom(input) {
             Some(data) => {
                 assert_eq!(data.date_time, "2023-07-20 17:18:54".to_owned());
-                assert_eq!(data.s_computername, "WIN-PC1".to_owned());
                 assert_eq!(data.s_sitename, "W3SVC279".to_owned());
+                assert_eq!(data.s_computername, "WIN-PC1".to_owned());
                 assert_eq!(data.s_ip, "192.168.1.104".to_owned());
                 assert_eq!(data.cs_method, "GET".to_owned());
                 assert_eq!(data.cs_uri_stem, "/api/Site/site-data".to_owned());
@@ -140,6 +140,37 @@ mod tests {
                 assert_eq!(data.cs_bytes, "1082".to_owned());
                 assert_eq!(data.time_taken, "3131".to_owned());
                 assert_eq!(data.c_authorization_header, "Bearer+token".to_owned());
+            }
+            None => println!("None"),
+        }
+    }
+    #[test]
+    fn test_parse_log_iis_w3c_custom_missing_values() {
+        let input = "2023-08-11 19:56:44 W3SVC1 WIN-PC1 ::1 GET / - 80 ::1 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/115.0.0.0+Safari/537.36+Edg/115.0.1901.200 - - localhost 304 142 756 1078 -";
+
+        match LogEntryIIS::parse_log_iis_w3c_custom(input) {
+            Some(data) => {
+                assert_eq!(data.date_time, "2023-08-11 19:56:44".to_owned());
+                assert_eq!(data.s_sitename, "W3SVC1".to_owned());
+                assert_eq!(data.s_computername, "WIN-PC1".to_owned());
+                assert_eq!(data.s_ip, "::1".to_owned());
+                assert_eq!(data.cs_method, "GET".to_owned());
+                assert_eq!(data.cs_uri_stem, "/".to_owned());
+                assert_eq!(data.cs_uri_query, "-".to_owned());
+                assert_eq!(data.s_port, "80".to_owned());
+                assert_eq!(data.c_ip, "::1".to_owned());
+                assert_eq!(data.cs_user_agent,"Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/115.0.0.0+Safari/537.36+Edg/115.0.1901.200".to_owned());
+                assert_eq!(data.cs_cookie,"-".to_owned());
+                assert_eq!(
+                    data.cs_referer,
+                    "-".to_owned()
+                );
+                assert_eq!(data.cs_host, "localhost".to_owned());
+                assert_eq!(data.sc_status, "304".to_owned());
+                assert_eq!(data.sc_bytes, "142".to_owned());
+                assert_eq!(data.cs_bytes, "756".to_owned());
+                assert_eq!(data.time_taken, "1078".to_owned());
+                assert_eq!(data.c_authorization_header, "-".to_owned());
             }
             None => println!("None"),
         }
