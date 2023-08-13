@@ -1,5 +1,5 @@
-use serde::{Deserialize, Serialize};
 use chrono::{TimeZone, Utc};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use serde_json::Value;
 use std::io::Write;
@@ -33,14 +33,15 @@ impl LogEntryIIS {
     /// parse_log_iis
     /// recive this input `date time s-sitename s-computername s-ip cs-method cs-uri-stem cs-uri-query s-port c-ip cs(User-Agent) cs(Cookie) cs(Referer) cs-host sc-status sc-bytes cs-bytes time-taken c-authorization-header`
     /// return LogEntryIIS
-    /// 
+    ///
     pub fn parse_log_iis_w3c_custom(input: &str) -> Option<Self> {
-        let elements: Vec<&str> = input.split(" ").collect();
+        if !input.starts_with("#") {
+            let elements: Vec<&str> = input.split(" ").collect();
             Some(LogEntryIIS {
-                date_time: format!("{} {}",elements[0],elements[1]),
+                date_time: format!("{} {}", elements[0], elements[1]),
                 s_sitename: elements[2].to_string(),
                 s_computername: elements[3].to_string(),
-                s_ip:elements[4].to_string(),
+                s_ip: elements[4].to_string(),
                 cs_method: elements[5].to_string(),
                 cs_uri_stem: elements[6].to_string(),
                 cs_uri_query: elements[7].to_string(),
@@ -56,8 +57,11 @@ impl LogEntryIIS {
                 time_taken: elements[17].to_string(),
                 c_authorization_header: elements[18].to_string(),
             })
+        } else {
+            None
         }
     }
+}
 
 #[no_mangle]
 pub extern "C" fn flb_filter_log_iis_w3c_custom(
@@ -79,34 +83,35 @@ pub extern "C" fn flb_filter_log_iis_w3c_custom(
     let time = dt.format("%Y-%m-%dT%H:%M:%S.%9f %z").to_string();
 
     let input_logs = v["log"].as_str().unwrap();
-    let el: LogEntryIIS = LogEntryIIS::parse_log_iis_w3c_custom(input_logs).unwrap();
-
-
-    let message = json!({
-        "date": el.date_time,
-        "s_sitename": el.s_sitename,
-        "s_computername": el.s_computername,
-        "s_ip": el.s_ip,
-        "cs_method": el.cs_method,
-        "cs_uri_stem": el.cs_uri_stem,
-        "cs_uri_query": el.cs_uri_query,
-        "s_port": el.s_port,
-        "c_ip": el.c_ip,
-        "cs_user_agent": el.cs_user_agent,
-        "cs_cookie": el.cs_cookie,
-        "cs_referer": el.cs_referer,
-        "cs_host": el.cs_host,
-        "sc_status": el.sc_status,
-        "sc_bytes": el.sc_bytes,
-        "cs_bytes": el.cs_bytes,
-        "time_taken": el.time_taken,
-        "c_authorization_header": el.c_authorization_header,
-        "time": format!("{}", time),
-        "tag": vtag,
-        "source": "LogEntryIIS",
-    });
-    let buf: String = message.to_string();
+    let mut buf=String::new();
+    if let Some(el) = LogEntryIIS::parse_log_iis_w3c_custom(input_logs) {
+        let message = json!({
+            "date": el.date_time,
+            "s_sitename": el.s_sitename,
+            "s_computername": el.s_computername,
+            "s_ip": el.s_ip,
+            "cs_method": el.cs_method,
+            "cs_uri_stem": el.cs_uri_stem,
+            "cs_uri_query": el.cs_uri_query,
+            "s_port": el.s_port,
+            "c_ip": el.c_ip,
+            "cs_user_agent": el.cs_user_agent,
+            "cs_cookie": el.cs_cookie,
+            "cs_referer": el.cs_referer,
+            "cs_host": el.cs_host,
+            "sc_status": el.sc_status,
+            "sc_bytes": el.sc_bytes,
+            "cs_bytes": el.cs_bytes,
+            "time_taken": el.time_taken,
+            "c_authorization_header": el.c_authorization_header,
+            "time": format!("{}", time),
+            "tag": vtag,
+            "source": "LogEntryIIS",
+        });
+        buf= message.to_string();
+    } 
     buf.as_ptr()
+
 }
 
 #[cfg(test)]
@@ -160,11 +165,8 @@ mod tests {
                 assert_eq!(data.s_port, "80".to_owned());
                 assert_eq!(data.c_ip, "::1".to_owned());
                 assert_eq!(data.cs_user_agent,"Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/115.0.0.0+Safari/537.36+Edg/115.0.1901.200".to_owned());
-                assert_eq!(data.cs_cookie,"-".to_owned());
-                assert_eq!(
-                    data.cs_referer,
-                    "-".to_owned()
-                );
+                assert_eq!(data.cs_cookie, "-".to_owned());
+                assert_eq!(data.cs_referer, "-".to_owned());
                 assert_eq!(data.cs_host, "localhost".to_owned());
                 assert_eq!(data.sc_status, "304".to_owned());
                 assert_eq!(data.sc_bytes, "142".to_owned());
