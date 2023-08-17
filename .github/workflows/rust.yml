@@ -20,3 +20,16 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
+    - name: Compile
+      id: compile
+      uses: rust-build/rust-build.action@v1.4.3
+      with:
+        RUSTTARGET: wasm32-unknown-unknown
+        UPLOAD_MODE: none
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Binary
+        path: |
+          ${{ steps.compile.outputs.BUILT_ARCHIVE }}
+          ${{ steps.compile.outputs.BUILT_CHECKSUM }}
