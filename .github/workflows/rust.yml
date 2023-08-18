@@ -24,3 +24,5 @@ jobs:
       run: rustup target add wasm32-unknown-unknown
     - name: Build & compile
       run: cargo build --target wasm32-unknown-unknown --release
+    - name: List file
+      run: ls target/wasm32-unknown-unknown/release/*.wasm
