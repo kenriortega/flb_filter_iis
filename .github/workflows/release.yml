@@ -18,7 +18,9 @@ jobs:
     - name: Run tests
       run: cargo test --verbose
     - name: Compile
-      run: cargo build --target wasm32-unknown-unknown --release
+      run: |
+      rustup target add wasm32-unknown-unknown
+      cargo build --target wasm32-unknown-unknown --release
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
