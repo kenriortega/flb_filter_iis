@@ -3,6 +3,8 @@ on:
   release:
     types: [released]
 
+permissions:
+  contents: write
 env:
   CARGO_TERM_COLOR: always
 
@@ -24,7 +26,7 @@ jobs:
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
-        repo_token: ${{ secrets.TOKEN }}
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
         file: target/wasm32-unknown-unknown/release/flb_filter_iis_wasm.wasm
         asset_name: flb_filter_iis_wasm.wasm
         tag: ${{ github.ref }}
