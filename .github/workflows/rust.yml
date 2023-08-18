@@ -20,4 +20,7 @@ jobs:
       run: cargo build --verbose
     - name: Run tests
       run: cargo test --verbose
-
+    - name: Add target
+      run: rustup target add wasm32-unknown-unknown
+    - name: Build & compile
+      run: cargo build --target wasm32-unknown-unknown --release
