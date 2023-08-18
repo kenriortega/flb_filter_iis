@@ -21,9 +21,18 @@ jobs:
       run: rustup target add wasm32-unknown-unknown
     - name: Build & compile
       run: cargo build --target wasm32-unknown-unknown --release
-    - name: Upload artifact
-      uses: actions/upload-artifact@v3
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@v2
       with:
-        name: Binary
-        path: |
-          target/wasm32-unknown-unknown/release/flb_filter_iis_wasm.wasm
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: target/wasm32-unknown-unknown/release/flb_filter_iis_wasm.wasm
+        asset_name: flb_filter_iis_wasm
+        tag: ${{ github.ref }}
+        overwrite: true
+        body: "New Release"
+    # - name: Upload artifact
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: Binary
+    #     path: |
+    #       target/wasm32-unknown-unknown/release/flb_filter_iis_wasm.wasm
