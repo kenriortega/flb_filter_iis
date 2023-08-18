@@ -24,9 +24,9 @@ jobs:
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@v2
       with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        repo_token: ${{ secrets.CI_ACCESS_TOKEN }}
         file: target/wasm32-unknown-unknown/release/flb_filter_iis_wasm.wasm
-        asset_name: flb_filter_iis_wasm
+        asset_name: flb_filter_iis_wasm.wasm
         tag: ${{ github.ref }}
         overwrite: true
         body: "New Release"
