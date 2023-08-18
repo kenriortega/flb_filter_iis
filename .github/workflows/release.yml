@@ -1,0 +1,27 @@
+name: Release new action version
+on:
+  release:
+    types: [released]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
+    - name: Compile
+      run: cargo build --target wasm32-unknown-unknown --release
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: Binary
+        path: |
+          target/wasm32-unknown-unknown/release/flb_filter_iis_wasm.wasm
