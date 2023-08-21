@@ -34,7 +34,7 @@ impl LogEntryIIS {
     /// recive this input `date time s-sitename s-computername s-ip cs-method cs-uri-stem cs-uri-query s-port c-ip cs(User-Agent) cs(Cookie) cs(Referer) cs-host sc-status sc-bytes cs-bytes time-taken c-authorization-header`
     /// return LogEntryIIS
     ///
-    pub fn parse_log_iis_w3c_custom(input: &str) -> Option<Self> {
+    pub fn parse_log_iis_w3c_parser(input: &str) -> Option<Self> {
         if !input.starts_with("#") {
             let elements: Vec<&str> = input.split(" ").collect();
             Some(LogEntryIIS {
@@ -64,7 +64,7 @@ impl LogEntryIIS {
 }
 
 #[no_mangle]
-pub extern "C" fn flb_filter_log_iis_w3c_custom(
+pub extern "C" fn flb_filter_log_iis_w3c_parser(
     tag: *const c_char,
     tag_len: u32,
     time_sec: u32,
@@ -84,7 +84,7 @@ pub extern "C" fn flb_filter_log_iis_w3c_custom(
 
     let input_logs = v["log"].as_str().unwrap();
     let mut buf=String::new();
-    if let Some(el) = LogEntryIIS::parse_log_iis_w3c_custom(input_logs) {
+    if let Some(el) = LogEntryIIS::parse_log_iis_w3c_parser(input_logs) {
         let message = json!({
             "date": el.date_time,
             "s_sitename": el.s_sitename,
@@ -106,14 +106,72 @@ pub extern "C" fn flb_filter_log_iis_w3c_custom(
             "c_authorization_header": el.c_authorization_header,
             "time": format!("{}", time),
             "tag": vtag,
-            "source": "LogEntryIIS",
         });
+
         buf= message.to_string();
     } 
     buf.as_ptr()
 
 }
 
+#[no_mangle]
+pub extern "C" fn flb_filter_log_iis_w3c_custom(
+    tag: *const c_char,
+    tag_len: u32,
+    time_sec: u32,
+    time_nsec: u32,
+    record: *const c_char,
+    record_len: u32,
+) -> *const u8 {
+    let slice_tag: &[u8] = unsafe { slice::from_raw_parts(tag as *const u8, tag_len as usize) };
+    let slice_record: &[u8] =
+        unsafe { slice::from_raw_parts(record as *const u8, record_len as usize) };
+    let mut vt: Vec<u8> = Vec::new();
+    vt.write(slice_tag).expect("Unable to write");
+    let vtag = str::from_utf8(&vt).unwrap();
+    let v: Value = serde_json::from_slice(slice_record).unwrap();
+    let dt = Utc.timestamp_opt(time_sec as i64, time_nsec).unwrap();
+    let time = dt.format("%Y-%m-%dT%H:%M:%S.%9f %z").to_string();
+
+    let input_logs = v["log"].as_str().unwrap();
+    let mut buf=String::new();
+    if let Some(el) = LogEntryIIS::parse_log_iis_w3c_parser(input_logs) {
+        let log_parsered = json!({
+            "date": el.date_time,
+            "s_sitename": el.s_sitename,
+            "s_computername": el.s_computername,
+            "s_ip": el.s_ip,
+            "cs_method": el.cs_method,
+            "cs_uri_stem": el.cs_uri_stem,
+            "cs_uri_query": el.cs_uri_query,
+            "s_port": el.s_port,
+            "c_ip": el.c_ip,
+            "cs_user_agent": el.cs_user_agent,
+            "cs_cookie": el.cs_cookie,
+            "cs_referer": el.cs_referer,
+            "cs_host": el.cs_host,
+            "sc_status": el.sc_status,
+            "sc_bytes": el.sc_bytes.parse::<i32>().unwrap(),
+            "cs_bytes": el.cs_bytes.parse::<i32>().unwrap(),
+            "time_taken": el.time_taken.parse::<i32>().unwrap(),
+            "c_authorization_header": el.c_authorization_header,
+            "tag": vtag,
+            "source": "LogEntryIIS",
+            "timestamp": format!("{}", time)
+        });
+
+        let message = json!({
+            "log": log_parsered,
+            "s_sitename": el.s_sitename,
+            "s_computername": el.s_computername,
+            "cs_host": el.cs_host,
+            "date": el.date_time,
+        });
+        buf= message.to_string();
+    } 
+    buf.as_ptr()
+
+}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -122,7 +180,7 @@ mod tests {
     fn test_parse_log_iis_w3c_custom() {
         let input = "2023-07-20 17:18:54 W3SVC279 WIN-PC1 192.168.1.104 GET /api/Site/site-data qName=quww 13334 10.0.0.0 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/114.0.0.0+Safari/537.36+Edg/114.0.1823.82 _ga=GA2.3.499592451.1685996504;+_gid=GA2.3.1209215542.1689808850;+_ga_PC23235C8Y=GS2.3.1689811012.8.0.1689811012.0.0.0 http://192.168.1.104:13334/swagger/index.html 192.168.1.104:13334 200 456 1082 3131 Bearer+token";
 
-        match LogEntryIIS::parse_log_iis_w3c_custom(input) {
+        match LogEntryIIS::parse_log_iis_w3c_parser(input) {
             Some(data) => {
                 assert_eq!(data.date_time, "2023-07-20 17:18:54".to_owned());
                 assert_eq!(data.s_sitename, "W3SVC279".to_owned());
@@ -153,7 +211,7 @@ mod tests {
     fn test_parse_log_iis_w3c_custom_missing_values() {
         let input = "2023-08-11 19:56:44 W3SVC1 WIN-PC1 ::1 GET / - 80 ::1 Mozilla/5.0+(Windows+NT+10.0;+Win64;+x64)+AppleWebKit/537.36+(KHTML,+like+Gecko)+Chrome/115.0.0.0+Safari/537.36+Edg/115.0.1901.200 - - localhost 304 142 756 1078 -";
 
-        match LogEntryIIS::parse_log_iis_w3c_custom(input) {
+        match LogEntryIIS::parse_log_iis_w3c_parser(input) {
             Some(data) => {
                 assert_eq!(data.date_time, "2023-08-11 19:56:44".to_owned());
                 assert_eq!(data.s_sitename, "W3SVC1".to_owned());
