@@ -1,6 +1,18 @@
 version: '3.8'
 
+
+volumes:
+  clickhouse:
 services:
+  clickhouse:
+    container_name: clickhouse
+    image: bitnami/clickhouse:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=no
+      - CLICKHOUSE_ADMIN_PASSWORD=default
+    ports:
+      - 8123:8123
+
   fluent-bit:
     image: cr.fluentbit.io/fluent/fluent-bit
     container_name: fluent-bit
@@ -10,4 +22,15 @@ services:
     volumes:
       - ./docker/conf/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
       - ./target/wasm32-unknown-unknown/release/flb_filter_iis_wasm.wasm:/plugins/flb_filter_iis_wasm.wasm
-      - ./docker/dataset/:/dataset/
+      - ./docker/dataset\:/dataset/
+
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    depends_on:
+      - clickhouse
+    ports:
+      - "3000:3000"
